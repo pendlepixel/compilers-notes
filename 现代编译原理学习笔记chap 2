@@ -17,3 +17,54 @@
 优化的程序化流程：正则表达式 -> NFA -> DFA -> 最小化自动机 -> 程序
 
 LEX：LEXical compiler的缩写，是Unix环境下非常著名的工具,主要功能是生成一个词法分析器(scanner)的C源码，描述规则采用正则表达式
+它接受一种高级的、面向问题的说明书，并用它匹配字符串中的字符、生成能够是被正则表达式的程序。正则表达式通过用户输入的代码说明书给出。
+lex识别这些表达式，并将输入流分成一些匹配这些表达式的字符串。lex常与yacc一起使用
+
+LEX语法规则：
+LEX分为三部分，分别是：声明、转换规则和其他函数，对应的书写形式如下：
+declarations
+%%
+translation rules
+%%
+auxiliary procedures
+
+声明段包括变量的声明、符号常量的声明和正则表达式声明。希望出现在目标C源码中的代码，用%{…%}扩在一起。
+举例如下(文件test.l)：
+%{
+/*这是一个进行简单字数统计的函数*/
+int wordCount = 0;
+%}
+chars [A-za-z\_\'\.\"]
+numbers ([0-9])+
+delim [" "\n\t]
+whitespace {delim}+
+words {chars}+
+%%
+{words} { wordCount++; /*increase the word count by one*/ }
+{whitespace} { /* do nothing*/ }
+{numbers} { /* one may want to add some processing here*/ }
+%%
+void main()
+{
+yylex(); /* start the analysis*/
+printf(" No of words: %d\n", wordCount);
+}
+int yywrap()
+{
+return 1;
+}
+
+书写格式按照上面的，每行都需要顶行写。
+lex自己提供了一些变量和接口。其中yylex()和yywrap()都是lex自己的提供的接口。
+yylex()这个接口开始分析，它由lex自动生成。
+yywrap()这个函数在文件末尾进行调用。
+
+linux中lex和yacc的对应版本分别是：flex和bison
+安装flex和bison命令:sudo apt-get install flex bison
+使用flex步骤：
+(1)编写test.l文件,会生成lex.yy.c文件
+(2)gcc lex.yy.c -o main.out
+(3)./main.out  (不要再这行接着输入文字，flex不会计数的）
+(4)hello 234 test（输入一些内容）
+(5)（输入ctrl+d表示结束）
+会打印出:  No of words: 2（表示找到了hello和test这两个单词）
